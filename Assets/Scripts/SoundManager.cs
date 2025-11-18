@@ -1,14 +1,28 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
 public class SoundManager : MonoBehaviour
 {
     [SerializeField] private AudioSource sfxAudioSource;
-
     [SerializeField] private List<AudioClip> audioClips;
+    
+    public static SoundManager Instance;
 
-    private AudioClip audioClip;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+// Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         
