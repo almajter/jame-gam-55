@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class JumpBoost : MonoBehaviour
 {
+    [SerializeField] private float jumpForceMultiplier = 1.5f; 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -19,7 +20,7 @@ public class JumpBoost : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            GameEvents.OnJumpBoostPickedUp?.Invoke();
+            GameEvents.OnJumpBoostPickedUp?.Invoke(jumpForceMultiplier);
             Debug.Log("Jump power up picked up");
             Destroy(gameObject);
         }

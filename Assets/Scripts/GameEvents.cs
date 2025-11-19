@@ -3,5 +3,5 @@ using UnityEngine;
 
 public static class GameEvents
 {
-    public static Action OnJumpBoostPickedUp;
+    public static Action<float> OnJumpBoostPickedUp;
 }

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1713347010955964006}
   - component: {fileID: 8180890270698966301}
   - component: {fileID: 5539064995406287719}
+  - component: {fileID: 8034862226206692556}
   m_Layer: 0
   m_Name: PrehtPlayer
   m_TagString: Player
@@ -245,3 +246,21 @@ MonoBehaviour:
   UseRigidBodyForMotion: 0
   AutoUpdateKinematicState: 1
   AutoSetKinematicOnDespawn: 1
+--- !u!114 &8034862226206692556
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 882378430196973952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c807e4fe8c9ddea47ac98fce0e9f4c69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  rb: {fileID: 0}
+  groundCheck: {fileID: 0}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0

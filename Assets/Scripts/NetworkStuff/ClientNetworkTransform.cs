@@ -3,7 +3,7 @@ using UnityEngine;
 using Unity.Netcode.Components;
 public class ClientNetworkTransform : NetworkTransform
 {
-    
+    /*
     private float horizontal;
     private float speed = 8f;
     private float jumpingPower = 16f;
@@ -46,7 +46,7 @@ public class ClientNetworkTransform : NetworkTransform
     /*private bool IsGrounded()
     {
         return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
-    }*/
+    }
 
     private void Flip()
     {
@@ -57,9 +57,25 @@ public class ClientNetworkTransform : NetworkTransform
             localScale.x *= -1f;
             transform.localScale = localScale;
         }
-    }
+    }*/
     protected override bool OnIsServerAuthoritative()
     {
         return false;
     }
+    /*
+    void ApplyJumpPowerUp(float jumpMultiplier)
+    {
+        jumpingPower *= jumpMultiplier;
+        Debug.Log($"jump increased by {(jumpMultiplier - 1) * 100}%");
+    }
+
+    private void OnEnable()
+    {
+        GameEvents.OnJumpBoostPickedUp += ApplyJumpPowerUp;
+    }
+    
+    private void OnDisable()
+    {
+        GameEvents.OnJumpBoostPickedUp -= ApplyJumpPowerUp;
+    }*/
 }
