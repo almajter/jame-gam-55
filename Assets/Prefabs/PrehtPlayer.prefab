@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 5539064995406287719}
   m_Layer: 0
   m_Name: PrehtPlayer
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -227,6 +227,7 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+  rb: {fileID: 0}
 --- !u!114 &5539064995406287719
 MonoBehaviour:
   m_ObjectHideFlags: 0
