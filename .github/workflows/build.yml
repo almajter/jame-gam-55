@@ -59,7 +59,7 @@ jobs:
           buildName: JameGam55
 
       - name: Upload Build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
@@ -76,13 +76,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download Mac Build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Build-StandaloneOSX
           path: builds/mac
 
       - name: Download Windows Build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Build-StandaloneWindows64
           path: builds/windows
