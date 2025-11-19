@@ -737,7 +737,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1200000002}
-        m_TargetAssemblyTypeName: StartGameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: MainMenuController, Assembly-CSharp
         m_MethodName: StartGame
         m_Mode: 1
         m_Arguments:
@@ -805,7 +805,7 @@ GameObject:
   - component: {fileID: 1999999999}
   - component: {fileID: 1200000002}
   m_Layer: 0
-  m_Name: StartGameManager
+  m_Name: MainMenuController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -835,7 +835,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1999999997}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 15e0146ecbefb4a018cf06697bb5a386, type: 3}
+  m_Script: {fileID: 11500000, guid: 14b48b5d4baf4436bb4f5aa42669c614, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2100000000
@@ -922,7 +922,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1200000002}
-        m_TargetAssemblyTypeName: StartGameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: MainMenuController, Assembly-CSharp
         m_MethodName: OpenOptions
         m_Mode: 1
         m_Arguments:
@@ -1191,7 +1191,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1200000002}
-        m_TargetAssemblyTypeName: StartGameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: MainMenuController, Assembly-CSharp
         m_MethodName: OpenCredits
         m_Mode: 1
         m_Arguments:
@@ -1460,7 +1460,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1200000002}
-        m_TargetAssemblyTypeName: StartGameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: MainMenuController, Assembly-CSharp
         m_MethodName: QuitGame
         m_Mode: 1
         m_Arguments:

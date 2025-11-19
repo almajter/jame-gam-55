@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class StartGameManager : MonoBehaviour
+public class MainMenuController : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -12,7 +12,15 @@ public class StartGameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        var sceneName = SceneManager.GetActiveScene().name;
+        if (sceneName == "Credits" && Input.GetKeyDown(KeyCode.Escape))
+        {
+            BackToMenu();
+        }
+        if (sceneName == "Options" && Input.GetKeyDown(KeyCode.Escape))
+        {
+            BackToMenu();
+        }
     }
 
     public void StartGame()
@@ -20,17 +28,21 @@ public class StartGameManager : MonoBehaviour
         SceneManager.LoadScene("PrehtScene");
     }
 
-    // Menu buttons
     public void OpenOptions()
     {
         Debug.Log("Options clicked");
-        // TODO
+        SceneManager.LoadScene("Options");
     }
 
     public void OpenCredits()
     {
         Debug.Log("Credits clicked");
-        // TODO
+        SceneManager.LoadScene("Credits");
+    }
+
+    public static void BackToMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void QuitGame()
