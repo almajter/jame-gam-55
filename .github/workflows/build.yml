@@ -1,4 +1,4 @@
-name: Build Unity Game
+name: Build
 
 on:
   push:
@@ -7,104 +7,85 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
-
-env:
-  UNITY_VERSION: 6000.0.61f1
 
 jobs:
   build:
-    name: Build for ${{ matrix.targetPlatform }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        targetPlatform:
-          - StandaloneOSX # Mac
-          - StandaloneWindows64  # Windows 64-bit
+        os: [ubuntu-latest]
+        build-target: ['StandaloneWindows64']
+        build-args: ['']
+    env:
+      UNITY_PROJECT_PATH: ${{ github.workspace }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          clean: ${{ github.event.inputs.clean == 'true' }}
           lfs: true
+          submodules: 'recursive'
 
-      - name: Cache Unity Library
-        uses: actions/cache@v3
+      - uses: buildalon/unity-setup@v1
         with:
-          path: Library
-          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-${{ matrix.targetPlatform }}-
-            Library-
+          build-targets: '${{ matrix.build-target }}'
 
-      - name: Free Disk Space
+      - uses: buildalon/activate-unity-license@v1
+        with:
+          license: 'Personal'
+          username: '${{ secrets.UNITY_USERNAME }}'
+          password: '${{ secrets.UNITY_PASSWORD }}'
+
+      - name: Add Build Pipeline Package
+        working-directory: ${{ env.UNITY_PROJECT_PATH }}
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          npm install -g openupm-cli
+          openupm add com.virtualmaker.buildalon
 
-      - name: Build Unity Project
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      - uses: buildalon/unity-action@v1
+        name: Project Validation
         with:
-          targetPlatform: ${{ matrix.targetPlatform }}
-          unityVersion: ${{ env.UNITY_VERSION }}
-          buildsPath: build
-          buildName: JameGam55
+          log-name: 'project-validation'
+          build-target: '${{ matrix.build-target }}'
+          args: '-quit -batchmode -executeMethod Buildalon.Editor.BuildPipeline.UnityPlayerBuildTools.ValidateProject'
 
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
+      - uses: buildalon/unity-action@v1
+        name: '${{ matrix.build-target }}-Build'
         with:
-          name: Build-${{ matrix.targetPlatform }}
-          path: build/${{ matrix.targetPlatform }}
-          retention-days: 14
+          log-name: '${{ matrix.build-target }}-Build'
+          build-target: '${{ matrix.build-target }}'
+          args: '-quit -batchmode -executeMethod Buildalon.Editor.BuildPipeline.UnityPlayerBuildTools.StartCommandLineBuild${{ matrix.build-args }}'
 
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download Mac Build
-        uses: actions/download-artifact@v4
+      - uses: actions/upload-artifact@v4
+        id: upload-artifact
+        name: 'Upload ${{ matrix.build-target }} Artifacts'
+        if: success() || failure()
         with:
-          name: Build-StandaloneOSX
-          path: builds/mac
+          compression-level: 0
+          retention-days: 1
+          name: '${{ github.run_number }}.${{ github.run_attempt }}-${{ matrix.os }}-${{ matrix.build-target }}-Artifacts'
+          path: |
+            ${{ github.workspace }}/**/*.log
+            ${{ env.UNITY_PROJECT_PATH }}/Builds/StandaloneWindows64/**/*.exe
+            ${{ env.UNITY_PROJECT_PATH }}/Builds/StandaloneWindows64/**/*.dll
+            ${{ env.UNITY_PROJECT_PATH }}/Builds/StandaloneWindows64/**/*_Data
+            ${{ env.UNITY_PROJECT_PATH }}/Builds/StandaloneWindows64/MonoBleedingEdge/
 
-      - name: Download Windows Build
-        uses: actions/download-artifact@v4
-        with:
-          name: Build-StandaloneWindows64
-          path: builds/windows
-
-      - name: Create Archives
+      - name: Clean Artifacts
+        if: always()
+        shell: pwsh
         run: |
-          cd builds/mac && zip -r ../../JameGam55-Mac.zip . && cd ../..
-          cd builds/windows && zip -r ../../JameGam55-Windows.zip . && cd ../..
+          # Clean Logs
+          Get-ChildItem -Path "${{ env.UNITY_PROJECT_PATH }}" -File -Filter "*.log" -Recurse | Remove-Item -Force
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            JameGam55-Mac.zip
-            JameGam55-Windows.zip
-          body: |
-            ## JameGam55 Release
+          $artifacts = "${{ env.UNITY_PROJECT_PATH }}/Builds"
+          Write-Host "::debug::Build artifacts path: $artifacts"
 
-            ### Downloads
-            - **macOS**: JameGam55-Mac.zip
-            - **Windows**: JameGam55-Windows.zip
-
-            Built with Unity ${{ env.UNITY_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if (Test-Path -Path $artifacts) {
+            try {
+              Remove-Item $artifacts -Recurse -Force
+            } catch {
+              Write-Warning "Failed to delete artifacts folder file: $_"
+            }
+          } else {
+            Write-Host "::debug::Artifacts folder not found."
