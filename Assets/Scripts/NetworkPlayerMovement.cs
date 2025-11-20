@@ -119,6 +119,7 @@ public class NetworkPlayerMovement : NetworkBehaviour
     [ServerRpc]
     void RequestKickServerRpc(ulong targetClientId)
     {
+        Debug.Log($"TargetClientId: {targetClientId}");
         ApplyKickClientRpc(targetClientId, new ClientRpcParams
         {
             Send = new ClientRpcSendParams
@@ -133,7 +134,8 @@ public class NetworkPlayerMovement : NetworkBehaviour
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower * kickPower);
+        Debug.Log("AAAAAAAAA");
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower);
     }
 
     void ApplyJumpPowerUp(float jumpMultiplier)
