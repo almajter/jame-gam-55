@@ -132,10 +132,11 @@ public class NetworkPlayerMovement : NetworkBehaviour
     [ClientRpc]
     void ApplyKickClientRpc(ulong targetClientId, ClientRpcParams rpcParams = default)
     {
+        NetworkObject targetObj = NetworkManager.Singleton.ConnectedClients[targetClientId].PlayerObject;
+        Rigidbody2D rb2D = targetObj.GetComponent<Rigidbody2D>();
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
-        Debug.Log("AAAAAAAAA");
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower);
+        rb2D.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower);
     }
 
     void ApplyJumpPowerUp(float jumpMultiplier)
