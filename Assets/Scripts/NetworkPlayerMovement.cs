@@ -10,9 +10,11 @@ public class NetworkPlayerMovement : NetworkBehaviour
     private bool isZPressed;
     private bool isPowerGoingUp;
 
-    [SerializeField] private float speed = 6f;
+    [SerializeField] public float speed = 10f;
+    [SerializeField] public float acceleration = 20f;
+    [SerializeField] public float deceleration = 30f;
     [SerializeField] private float jumpingPower = 6f;
-    [SerializeField] private float kickPower = 2f;
+    [SerializeField] private float kickPower = 3f;
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
@@ -21,21 +23,16 @@ public class NetworkPlayerMovement : NetworkBehaviour
 
     void Update()
     {
-        horizontal = Input.GetAxisRaw("Horizontal");
+        if (!IsOwner) return;
 
         if (Input.GetButtonDown("Jump") && IsGrounded())
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower);
         }
-
+        ControlLeftRight();
         HandleKickPower(KeyCode.Z);
         HandlePowerBar();
         Flip();
-    }
-
-    private void FixedUpdate()
-    {
-        rb.linearVelocity = new Vector2(horizontal * speed, rb.linearVelocity.y);
     }
 
     private bool IsGrounded()
@@ -45,13 +42,27 @@ public class NetworkPlayerMovement : NetworkBehaviour
 
     private void Flip()
     {
-        if (isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f)
+        if (isFacingRight && rb.linearVelocity.x < 0f || !isFacingRight && rb.linearVelocity.x > 0f)
         {
             isFacingRight = !isFacingRight;
             Vector3 localScale = transform.localScale;
             localScale.x *= -1f;
             transform.localScale = localScale;
         }
+    }
+
+    private void ControlLeftRight()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+
+        float targetSpeed = horizontal * speed;
+        float currentSpeed = rb.linearVelocity.x;
+
+        float accel = (Mathf.Abs(targetSpeed) > 0.1f) ? acceleration : deceleration;
+
+        float newSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accel * Time.deltaTime);
+
+        rb.linearVelocity = new Vector2(newSpeed, rb.linearVelocity.y);
     }
 
     private void HandleKickPower(KeyCode key)
@@ -111,16 +122,14 @@ public class NetworkPlayerMovement : NetworkBehaviour
         if (hit2D.collider != null && hit2D.collider.CompareTag("Player"))
         {
             ulong targetId = hit2D.collider.GetComponent<NetworkObject>().OwnerClientId;
-            RequestKickServerRpc(targetId);
+            RequestKickServerRpc(targetId, kickPowerIndicator.transform.localScale.y, isFacingRight);
         }
-        // TODO add kick depending on kickPowerIndicator.transform.localScale.y (0-1)
     }
 
     [ServerRpc]
-    void RequestKickServerRpc(ulong targetClientId)
+    void RequestKickServerRpc(ulong targetClientId, float strength, bool isFacingRight)
     {
-        Debug.Log($"TargetClientId: {targetClientId}");
-        ApplyKickClientRpc(targetClientId, new ClientRpcParams
+        ApplyKickClientRpc(targetClientId, strength, isFacingRight, new ClientRpcParams
         {
             Send = new ClientRpcSendParams
             {
@@ -130,13 +139,13 @@ public class NetworkPlayerMovement : NetworkBehaviour
     }
 
     [ClientRpc]
-    void ApplyKickClientRpc(ulong targetClientId, ClientRpcParams rpcParams = default)
+    void ApplyKickClientRpc(ulong targetClientId, float strength, bool isFacingRight, ClientRpcParams rpcParams = default)
     {
         NetworkObject targetObj = NetworkManager.Singleton.ConnectedClients[targetClientId].PlayerObject;
         Rigidbody2D rb2D = targetObj.GetComponent<Rigidbody2D>();
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
-        rb2D.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower);
+        rb2D.linearVelocity = new Vector2((isFacingRight ? 1 : -1) * jumpingPower * kickPower * strength, jumpingPower * kickPower * strength);
     }
 
     void ApplyJumpPowerUp(float jumpMultiplier)
