@@ -24,7 +24,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Level1.unity
     guid: 5fa4bfe30ac574fe5ae995e219dc0ee7
   - enabled: 1
-    path: Assets/Scenes/Dimnik scene.unity
+    path: Assets/Scenes/DimnikScene.unity
     guid: 5e795ee5572c6994d9e69109d773a3b2
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

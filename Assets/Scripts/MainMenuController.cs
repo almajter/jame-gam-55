@@ -25,7 +25,7 @@ public class MainMenuController : MonoBehaviour
 
     public void StartGame()
     {
-        SceneManager.LoadScene("PrehtScene");
+        SceneManager.LoadScene("DimnikScene");
     }
 
     public void OpenOptions()
