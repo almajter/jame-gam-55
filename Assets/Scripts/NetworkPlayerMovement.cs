@@ -9,6 +9,8 @@ public class NetworkPlayerMovement : NetworkBehaviour
     private bool isFacingRight = true;
     private bool isZPressed;
     private bool isPowerGoingUp;
+    private Camera cam;
+    public bool canMove = true;
 
     [SerializeField] public float speed = 10f;
     [SerializeField] public float acceleration = 20f;
@@ -20,39 +22,45 @@ public class NetworkPlayerMovement : NetworkBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private GameObject powerBarGameObject;
     [SerializeField] private GameObject kickPowerIndicator;
+    [SerializeField] private GameObject hookPrefab;
+    [SerializeField] private GameObject firePoint;
+
+    void Start()
+    {
+        if (IsOwner)
+        {
+            cam = Camera.main;
+            Camera.main.GetComponent<CameraFollow>().target = transform;
+            Camera.main.GetComponent<CameraFollow>().offset = new Vector3(0, 1, -10);
+        }
+    }
 
     void Update()
     {
         if (!IsOwner) return;
+        if (canMove)
+        {
+            HandleNormalMovement();
+            HandleKickPower(KeyCode.Z);
+            HandlePowerBar();
 
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                Vector3 mouseWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                mouseWorld.z = 0f;
+                Vector2 direction = (mouseWorld - firePoint.transform.position).normalized;
+                RequestFireHookServerRpc(direction);
+            }
+        }
+    }
+
+    private void HandleNormalMovement()
+    {
         if (Input.GetButtonDown("Jump") && IsGrounded())
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpingPower);
         }
-        ControlLeftRight();
-        HandleKickPower(KeyCode.Z);
-        HandlePowerBar();
-        Flip();
-    }
 
-    private bool IsGrounded()
-    {
-        return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
-    }
-
-    private void Flip()
-    {
-        if (isFacingRight && rb.linearVelocity.x < 0f || !isFacingRight && rb.linearVelocity.x > 0f)
-        {
-            isFacingRight = !isFacingRight;
-            Vector3 localScale = transform.localScale;
-            localScale.x *= -1f;
-            transform.localScale = localScale;
-        }
-    }
-
-    private void ControlLeftRight()
-    {
         float horizontal = Input.GetAxisRaw("Horizontal");
 
         float targetSpeed = horizontal * speed;
@@ -63,6 +71,23 @@ public class NetworkPlayerMovement : NetworkBehaviour
         float newSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accel * Time.deltaTime);
 
         rb.linearVelocity = new Vector2(newSpeed, rb.linearVelocity.y);
+        HandleFlip();
+    }
+
+    private bool IsGrounded()
+    {
+        return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+    }
+
+    private void HandleFlip()
+    {
+        if (isFacingRight && rb.linearVelocity.x < 0f || !isFacingRight && rb.linearVelocity.x > 0f)
+        {
+            isFacingRight = !isFacingRight;
+            Vector3 localScale = transform.localScale;
+            localScale.x *= -1f;
+            transform.localScale = localScale;
+        }
     }
 
     private void HandleKickPower(KeyCode key)
@@ -146,6 +171,26 @@ public class NetworkPlayerMovement : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
         rb2D.linearVelocity = new Vector2((isFacingRight ? 1 : -1) * jumpingPower * kickPower * strength, jumpingPower * kickPower * strength);
+    }
+
+    [ServerRpc]
+    void RequestFireHookServerRpc(Vector2 direction)
+    {
+        GameObject hookObj = Instantiate(hookPrefab, firePoint.transform.position, Quaternion.identity);
+
+        hookObj.GetComponent<HookController2D>().SetDirection(direction);
+
+        hookObj.GetComponent<NetworkObject>().Spawn(true);
+    }
+
+    [ClientRpc]
+    public void MoveHookClientRpc(ulong targetClientId, Vector2 newPos, ClientRpcParams rpcParams = default)
+    {
+        NetworkObject targetObj = NetworkManager.Singleton.ConnectedClients[targetClientId].PlayerObject;
+        Rigidbody2D rb2D = targetObj.GetComponent<Rigidbody2D>();
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+        rb2D.MovePosition(newPos);
     }
 
     void ApplyJumpPowerUp(float jumpMultiplier)
