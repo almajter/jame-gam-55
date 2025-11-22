@@ -293,7 +293,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   canMove: 1
+  pullTarget: {x: 0, y: 0}
   speed: 8
+  pullSpeed: 3
   acceleration: 20
   deceleration: 30
   jumpingPower: 16

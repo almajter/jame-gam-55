@@ -11,8 +11,10 @@ public class NetworkPlayerMovement : NetworkBehaviour
     private bool isPowerGoingUp;
     private Camera cam;
     public bool canMove = true;
+    public Vector2 pullTarget;
 
     [SerializeField] public float speed = 10f;
+    [SerializeField] public float pullSpeed = 3f;
     [SerializeField] public float acceleration = 20f;
     [SerializeField] public float deceleration = 30f;
     [SerializeField] private float jumpingPower = 6f;
@@ -51,6 +53,14 @@ public class NetworkPlayerMovement : NetworkBehaviour
                 Vector2 direction = (mouseWorld - firePoint.transform.position).normalized;
                 RequestFireHookServerRpc(direction);
             }
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (!canMove)
+        {
+            rb.position = Vector2.Lerp(rb.position, pullTarget, pullSpeed * Time.fixedDeltaTime);
         }
     }
 
@@ -183,14 +193,15 @@ public class NetworkPlayerMovement : NetworkBehaviour
         hookObj.GetComponent<NetworkObject>().Spawn(true);
     }
 
-    [ClientRpc]
-    public void MoveHookClientRpc(ulong targetClientId, Vector2 newPos, ClientRpcParams rpcParams = default)
+    public void BeginBeingPulled(Vector2 target)
     {
-        NetworkObject targetObj = NetworkManager.Singleton.ConnectedClients[targetClientId].PlayerObject;
-        Rigidbody2D rb2D = targetObj.GetComponent<Rigidbody2D>();
-        if (NetworkManager.Singleton.LocalClientId != targetClientId)
-            return;
-        rb2D.MovePosition(newPos);
+        canMove = false;
+        pullTarget = target;
+    }
+
+    public void StopPulling()
+    {
+        canMove = true;
     }
 
     void ApplyJumpPowerUp(float jumpMultiplier)

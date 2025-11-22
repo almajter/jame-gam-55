@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class HookController2D : NetworkBehaviour
 {
-    public float speed = 10f;
-    public float pullSpeed = 5f;
+    float speed = 10f;
+    float pullSpeed = 10f;
 
     private Vector2 direction;
     private Vector2 startPoint;
@@ -34,16 +34,9 @@ public class HookController2D : NetworkBehaviour
         }
         else if (playerToPull != null)
         {
-            Rigidbody2D rb = playerToPull.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                Vector2 newPos = Vector2.MoveTowards(rb.position, startPoint, pullSpeed * Time.fixedDeltaTime);
-                playerToPull.GetComponent<NetworkPlayerMovement>().MoveHookClientRpc(playerToPull.OwnerClientId, newPos);
-                // rb.MovePosition(newPos);
-                transform.position = newPos;
-            }
+            transform.position = Vector2.MoveTowards(transform.position, startPoint, pullSpeed * Time.deltaTime);
 
-            if (Vector2.Distance(playerToPull.transform.position, startPoint) < 0.05f)
+            if (Vector2.Distance(transform.position, startPoint) < 0.05f)
             {
                 NetworkObject.Destroy(gameObject);
             }
@@ -62,21 +55,42 @@ public class HookController2D : NetworkBehaviour
             {
                 pulling = true;
                 playerToPull = netObj;
-
-                var playerMovement = other.GetComponent<NetworkPlayerMovement>();
-                if (playerMovement != null)
-                    playerMovement.canMove = false;
+                GetComponent<Collider2D>().enabled = false;
+                transform.position = other.gameObject.transform.position;
+                var player = other.GetComponent<NetworkPlayerMovement>();
+                StartPullClientRpc(player.OwnerClientId, startPoint);
             }
         }
+    }
+
+    [ClientRpc]
+    public void StartPullClientRpc(ulong targetClientId, Vector2 pullPoint)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        var player = NetworkManager.Singleton.ConnectedClients[targetClientId].PlayerObject.GetComponent<NetworkPlayerMovement>();
+
+        player.BeginBeingPulled(pullPoint);
+    }
+
+    [ClientRpc]
+    public void StopPullClientRpc(ulong targetClientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        var player = NetworkManager.Singleton.ConnectedClients[targetClientId].PlayerObject.GetComponent<NetworkPlayerMovement>();
+
+        player.StopPulling();
     }
 
     public override void OnNetworkDespawn()
     {
         if (playerToPull != null)
         {
-            var playerMovement = playerToPull.GetComponent<NetworkPlayerMovement>();
-            if (playerMovement != null)
-                playerMovement.canMove = true;
+            var player = playerToPull.GetComponent<NetworkPlayerMovement>();
+            StopPullClientRpc(player.OwnerClientId);
         }
     }
 }
